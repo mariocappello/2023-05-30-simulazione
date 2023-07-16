@@ -1,9 +1,12 @@
 package it.polito.tdp.gosales;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.gosales.model.Adiacenza;
 import it.polito.tdp.gosales.model.Model;
+import it.polito.tdp.gosales.model.Retailers;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -31,16 +34,16 @@ public class FXMLController {
     private Button btnSimula;
 
     @FXML
-    private ComboBox<?> cmbAnno;
+    private ComboBox<Integer> cmbAnno;
 
     @FXML
-    private ComboBox<?> cmbNazione;
+    private ComboBox<String> cmbNazione;
 
     @FXML
     private ComboBox<?> cmbProdotto;
 
     @FXML
-    private ComboBox<?> cmbRivenditore;
+    private ComboBox<Retailers> cmbRivenditore;
 
     @FXML
     private TextArea txtArchi;
@@ -62,12 +65,76 @@ public class FXMLController {
 
     @FXML
     void doAnalizzaComponente(ActionEvent event) {
-
+    	txtResult.clear();
+    	Retailers retailer = cmbRivenditore.getValue();
+    	if(retailer==null) {
+    		txtResult.setText("Selezionare un rivenditore!");
+    		return;
+    	}
+    	int dimesioneCompConnessa=model.getDimensioneComponenteConnessa(retailer);
+    	int dimensioneSommaArchi = model.getSommaArchiComponenteConnessa(retailer);
+    	txtResult.appendText("\n"+"La dimensione della componente connessa é : "+dimesioneCompConnessa+"\n");
+    	txtResult.appendText("\n"+"La dimensione della somma degli archi della componente connessa é : "+dimensioneSommaArchi+"\n");
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-
+    	txtResult.clear();
+    	
+    	String nazioneControllo = cmbNazione.getValue();
+    	if (nazioneControllo == null) {
+    		this.txtResult.setText("Scegli un Paese!");
+    		return;
+    	}
+    	
+    	Integer annoControllo = cmbAnno.getValue();
+    	if (annoControllo == null) {
+    		this.txtResult.setText("Scegli un anno!");
+    		return;
+    	}
+    	
+    	
+    	int M = 0;
+    	try {
+    		M = Integer.parseInt(txtNProdotti.getText() );
+    	} catch(NumberFormatException e) {
+    		this.txtResult.setText("Carattere invalido! Il valore da inserire deve essere un numero intero!");
+    		return;
+    	}
+    	 if(M<0) {
+    		 this.txtResult.setText("Carattere invalido! Il valore da inserire deve essere un numero intero!");
+    	 }
+    	
+    	int anno = cmbAnno.getValue();
+    	String nazione = cmbNazione.getValue().toString();
+    	model.creaGrafo(nazione, anno, M);
+    	
+    	if(model.grafoCreato()==true) {
+    		
+    		txtResult.appendText("Grafo creato!"+"\n");
+    		txtResult.appendText("Vertici : " + model.getNumeroVertici()+"\n");
+    		txtResult.appendText("Archi : "+model.getNumeroArchi()+"\n");
+    		List<Retailers> Vertici = model.getListaVertici(nazione);
+    		List<Adiacenza> Archi = model.getListaArchi(nazione, anno, M);
+    		for(Retailers r : Vertici) {
+    			txtVertici.appendText(r.toString());
+    		}
+    		for(Adiacenza aa : Archi) {
+    			txtArchi.appendText(aa.toString());
+    		}
+    		
+    		cmbRivenditore.setDisable(false);
+    		btnAnalizzaComponente.setDisable(false);
+    		btnSimula.setDisable(false);
+    		cmbProdotto.setDisable(false);
+    		cmbRivenditore.getItems().addAll(model.getListaVertici(nazione));
+    		
+    		
+    	}
+    	else {
+    		txtResult.appendText("Grafo non creato!!!!"+"\n");
+    	}
+    	
     }
 
     @FXML
@@ -95,6 +162,9 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	cmbNazione.getItems().addAll(model.getCountries());
+    	cmbAnno.getItems().addAll(2015,2016,2017,2018);
+    	
     }
 
 }
